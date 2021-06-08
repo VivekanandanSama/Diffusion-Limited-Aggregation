@@ -5,3 +5,7 @@ For details about Diffusion Limited Aggregation, please refer to this page - htt
 This is a preliminary exercise to execute this logic without using built-in functions like walk.
 The execution takes a whole day to run for a 500 x 500 matrix with 50000 points and any stickiness factor(k). 
 So of course, there is scope for improvement. Nevertheless it was a fun exercise.
+
+As an additional twist, I have also tried to predict k value from the images/matrices that were created as outputs.
+
+Cheers.
