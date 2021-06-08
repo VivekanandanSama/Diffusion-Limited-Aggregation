@@ -1,0 +1,430 @@
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+
+def random_init():
+    chosen = 0
+    #if (np.sum(grid[:,0]) + np.sum(grid[:,w]) + np.sum(grid[0,:]) + np.sum(grid[w,:])) == (4*(w+1)):
+    if border == 1:
+        z = np.where(grid == 0)
+        where = random.randint(0,(len(z[1])-1))
+        return [z[0][where], z[1][where]]
+    else:
+        # edge = random.choice(["up", "down", "left", "right"])
+        # where = random.choice(np.arange(w))
+        
+        while chosen == 0:
+            edge = random.choice(["up", "down", "left", "right"])
+            if edge == "up":
+                if (len(np.where(grid[0,:] == 0)[0]) != 0):
+                    where = random.choice(np.where(grid[0,:] == 0)[0])
+                    chosen = 1
+                    return [0, where]
+                else:
+                    chosen = 0
+            if edge == "down":
+                if (len(np.where(grid[w,:] == 0)[0]) != 0):
+                    where = random.choice(np.where(grid[w,:] == 0)[0])
+                    chosen = 1
+                    return [w, where]
+                else:
+                    chosen = 0
+            if edge == "left":
+                if (len(np.where(grid[:,0] == 0)[0]) != 0):
+                    where = random.choice(np.where(grid[:,0] == 0)[0])
+                    chosen = 1
+                    return [where, 0]
+                else:
+                    chosen = 0
+            if edge == "right":
+                if (len(np.where(grid[:,w] == 0)[0]) != 0):
+                    where = random.choice(np.where(grid[:,w] == 0)[0])
+                    chosen = 1
+                    return [where, w]
+                else:
+                    chosen = 0
+
+
+def move_pt(point):
+    moved = 0
+    if (grid[(point[0]-1)%(w+1), point[1]] != 0) & (grid[(point[0]+1)%(w+1), point[1]] != 0) & (grid[point[0], (point[1]-1)%(w+1)] != 0) & (grid[point[0], (point[1]+1)%(w+1)] != 0):
+        grid[point[0],point[1]] = 1
+        return (point,1, "blocked")
+    else:
+        while moved == 0:
+            move = random.choice(["up", "down", "left", "right"])
+            if move == "up":
+                if ((point[0] == 0) & (grid[w, point[1]] == 1)) | (grid[(point[0]-1)%(w+1), point[1]] != 0):
+                    moved = 0
+                else:
+                    grid[(point[0]-1)%(w+1), point[1]] = 1
+                    grid[point[0], point[1]] = 0
+                    point = [(point[0]-1)%(w+1), point[1]]
+                    moved = 1
+                #plt.matshow(grid)
+                  
+            if move == "down":
+                if ((point[0] == w) & (grid[0, point[1]] == 1)) | (grid[(point[0]+1)%(w+1), point[1]] != 0):
+                    moved = 0
+                else:
+                    grid[(point[0]+1)%(w+1), point[1]] = 1
+                    grid[point[0], point[1]] = 0
+                    point = [(point[0]+1)%(w+1), point[1]]
+                    moved = 1
+                    #plt.matshow(grid)
+            
+            if move == "left":
+                if ((point[1] == 0) & (grid[point[0],w] == 1)) |  (grid[point[0], (point[1]-1)%(w+1)] != 0):
+                    moved = 0
+                else:
+                    grid[point[0], (point[1]-1)%(w+1)] = 1
+                    grid[point[0], point[1]] = 0
+                    point = [point[0], (point[1]-1)%(w+1)]
+                    moved = 1
+                    #plt.matshow(grid)
+            
+            if move == "right":
+                if ((point[1] == w) & (grid[point[0], 0] == 1)) | (grid[point[0], (point[1]+1)%(w+1)] != 0):
+                    moved = 0
+                else:
+                    grid[point[0], (point[1]+1)%(w+1)] = 1
+                    grid[point[0], point[1]] = 0
+                    point = [point[0], (point[1]+1)%(w+1)]
+                    #plt.matshow(grid)
+        return (point,0, move)
+
+
+def walker(point):
+    grid[point[0], point[1]] = 1
+    stuck = 0
+    moves = []
+    while stuck != 1:
+        if (point[0] == 0) & (point[1] == 0):
+            if np.sum(grid[np.ix_([0,1],[0,1])]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+        
+        elif (point[0] == w) & (point[1] == 0):
+            if np.sum(grid[np.ix_([w-1,w],[0,1])]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+                
+        elif (point[0] == 0) & (point[1] == w):
+            if np.sum(grid[np.ix_([0,1],[w-1,w])]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+                
+        elif (point[0] == w) & (point[1] == w):
+            if np.sum(grid[np.ix_([w-1,w],[w-1,w])]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+                
+        elif (point[0] == 0) & (point[1] !=0) & (point[1] != w):
+            if np.sum(grid[np.ix_([0,1], np.arange((point[1]-1),(point[1]+2)))]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+                
+        elif (point[0] == w) & (point[1] !=0) & (point[1] != w):
+            if np.sum(grid[np.ix_([w-1,w], np.arange((point[1]-1),(point[1]+2)))]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+                
+        elif (point[0] != 0) & (point[0] != w) & (point[1] ==0):
+            if np.sum(grid[np.ix_(np.arange((point[0]-1),(point[0]+2)), [0,1])]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+                
+        elif (point[0] != 0) & (point[0] != w) & (point[1] ==w):
+            if np.sum(grid[np.ix_(np.arange((point[0]-1),(point[0]+2)), [w-1,w])]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+        
+        else:
+            if np.sum(grid[np.ix_(np.arange((point[0]-1),(point[0]+2)), np.arange((point[1]-1),(point[1]+2)))]) > 1:
+                stuck = random.choices([0,1], weights = [(1-k),k])[0]
+                if stuck == 0:
+                    moves.append("stick check")
+                    point,stuck,nxt = move_pt(point)
+                    moves.append(nxt)
+                else:
+                    moves.append("stuck")
+            else:
+                point,stuck,nxt = move_pt(point)
+                moves.append(nxt)
+          
+       
+    #plt.matshow(grid)
+    print("point stuck at", point)
+    return point, moves
+
+def calc_avg_density(grid,n):
+    neighbours = 0
+    for i in np.arange(w+1):
+        for j in np.arange(w+1):
+            
+            if grid[i][j] != 0:
+                #print("i =",i,",j =",j)
+                if (i == 0) & (j == 0):
+                    neighbours = neighbours + np.sum(grid[np.ix_([0,1],[0,1])]) - 1
+                elif (i == w) & (j == 0):
+                    neighbours = neighbours + np.sum(grid[np.ix_([w-1,w],[0,1])]) - 1
+                elif (i == w) & (j == w):
+                    neighbours = neighbours + np.sum(grid[np.ix_([w-1,w],[w-1,w])]) - 1
+                elif (i == 0) & (j == w):
+                    neighbours = neighbours + np.sum(grid[np.ix_([0,1],[w-1,w])]) - 1
+                elif (i == 0) & (j != 0) & (j != w):
+                    neighbours = neighbours + np.sum(grid[np.ix_([0,1], np.arange(j-1,j+2))]) - 1
+                elif (i == w) & (j != 0) & (j != w):
+                    neighbours = neighbours + np.sum(grid[np.ix_([w-1,w], np.arange(j-1,j+2))]) - 1
+                elif (i != 0) & (i != w) & (j == 0):
+                    neighbours = neighbours + np.sum(grid[np.ix_(np.arange(i-1,i+2), [0,1])]) - 1
+                elif (i != 0) & (i != w) & (j == w):
+                    neighbours = neighbours + np.sum(grid[np.ix_(np.arange(i-1,i+2), [w-1,w])]) - 1
+                else:
+                    neighbours = neighbours + np.sum(grid[np.ix_(np.arange(i-1,i+2), np.arange(j-1,j+2))]) - 1
+    
+    density = round(neighbours/n, 3)
+    return density
+
+
+## generating 500 x 500 images                  
+n = 50000
+w = 500
+grid = np.around(np.zeros((w+1,w+1)))
+grid[w//2,w//2] = 1
+k = 0.95
+#i = 0
+points = {}
+trajectory = {}
+border = 0
+for i in np.arange(n):
+    #point = np.array(random_init())
+    if ((np.sum(grid[:,0]) + np.sum(grid[:,w]) + np.sum(grid[0,:]) + np.sum(grid[w,:])) == 4*(w+1)) & (border == 0) :
+        print("New points can't be initiated from border. Initiating from inside")
+        point = np.array(random_init())
+        while grid[point[0],point[1]] != 0:
+            point = np.array(random_init())
+        border = 1
+    else:
+        point = np.array(random_init())
+        while grid[point[0],point[1]] != 0:
+            point = np.array(random_init())
+    points[i] = point
+    print(point[0], point[1])
+    stuck_point,trj = walker(point)
+    trajectory[i] = trj
+    #plt.matshow(grid)
+    if (np.sum(grid[np.ix_(np.arange(0,w+1), np.arange(0,w+1))]) != i+2):
+        print(point, "stuck at already stuck point")
+        plt.matshow(grid)
+        break
+
+
+plt.matshow(grid) ## k = 0.001
+print(np.sum(grid[np.ix_(np.arange(0,w+1), np.arange(0,w+1))]))
+print(np.sum(grid[:,0]) + np.sum(grid[:,w]) + np.sum(grid[0,:]) + np.sum(grid[w,:]))
+print("border = ", border)
+
+## Generating 200 x 200 images 
+w = 200
+N = np.arange(5000,10001,500)
+K = np.arange(0.05,1.01,0.05)
+
+for k in K:
+    for n in N:
+        print("Plot with N =", n, "and K =",k, "started.")
+        grid = np.around(np.zeros((w+1,w+1)))
+        grid[w//2,w//2] = 1
+        border = 0
+        points = {}
+        trajectory = {}
+        for i in np.arange(n):
+            #point = np.array(random_init())
+            if ((np.sum(grid[:,0]) + np.sum(grid[:,w]) + np.sum(grid[0,:]) + np.sum(grid[w,:])) == 4*(w+1)) & (border == 0) :
+                print("New points can't be initiated from border. Initiating from inside")
+                border = 1
+                point = np.array(random_init())
+                
+                while grid[point[0],point[1]] != 0:
+                    point = np.array(random_init())
+                
+            else:
+                point = np.array(random_init())
+                while grid[point[0],point[1]] != 0:
+                    point = np.array(random_init())
+            
+            points[i] = point
+            #print("point ",i+1, "-", point)
+            stuck_point,trj = walker(point)
+            trajectory[i] = trj
+            #plt.matshow(grid)
+            if (np.sum(grid[np.ix_(np.arange(0,w+1), np.arange(0,w+1))]) != i+2):
+                print(point, "stuck at already stuck point")
+                plt.matshow(grid)
+                break
+            
+            if (i%100 == 0):
+                print(i,"points stuck")
+        plt.matshow(grid) 
+        print(np.sum(grid[np.ix_(np.arange(0,w+1), np.arange(0,w+1))]))
+        print(np.sum(grid[:,0]) + np.sum(grid[:,w]) + np.sum(grid[0,:]) + np.sum(grid[w,:]))
+        print("border = ", border)
+        plt_name = "DLA_K_"+str(round(k,2))+"_N_"+str(int(n))
+        plt.savefig(plt_name+".png")
+        np.save(("grid_"+plt_name+".npy"),grid)
+        print("Plot with N =", n, " and K =",k, "created and saved.")
+        
+
+## reading grid files
+import os
+import re
+
+grid_names = []
+grids = []
+for filename in os.listdir("F:\Academics\IllinoisTech\CS 595 - Deep Learning\Locus"):    
+    if re.search("npy",filename):
+        grd = np.load(os.path.join("F:\Academics\IllinoisTech\CS 595 - Deep Learning\Locus",filename))
+        grids.append(grd)
+        grid_names.append(filename)
+
+
+## calculating values
+K_values = []
+N_values = []
+density_values = []
+
+for i in np.arange(len(grids)):
+    k_val = float(re.search("_K_(.+?)_N_",grid_names[i]).group(1))
+    K_values.append(k_val)
+    n_val = int(re.search("_N_(.+?).npy",grid_names[i]).group(1))
+    N_values.append(n_val)
+    print("K value =",k_val)
+    print("N value =",n_val)
+    print("grid sum cross check. N =", np.sum(grids[i])-1)
+    den_val = calc_avg_density(grids[i],n_val)
+    print("Density =", den_val,"\n")
+    density_values.append(den_val)
+
+## Analysis
+import pandas as pd
+import matplotlib
+dla_data = pd.DataFrame({"n":N_values, "density":density_values, "k":K_values})
+dla_data.sort_values(by = ["k","n"], inplace = True)
+
+## Plots 
+dla2 = dla_data.pivot(index = 'k', columns = 'n', values = 'density')
+dla2.plot(figsize = (12,5))
+
+df1 = dla_data[dla_data.n <= 6000]
+df1 = df1.pivot(index = 'k', columns = 'n', values = 'density')
+ax1 = df1.plot(figsize = (12,5))
+ax1.set_xlabel('k')
+ax1.set_ylabel('density')
+
+df2 = dla_data[dla_data.n > 6000]
+df2 = df2[df2.n <= 7500]
+df2 = df2.pivot(index = 'k', columns = 'n', values = 'density')
+ax2 = df2.plot(figsize = (12,5))
+ax2.set_xlabel('k')
+ax2.set_ylabel('density')
+
+df3 = dla_data[dla_data.n > 7500]
+df3 = df3.pivot(index = 'k', columns = 'n', values = 'density')
+ax3 = df3.plot(figsize = (12,5))
+ax3.set_xlabel('k')
+ax3.set_ylabel('density')
+
+## trying a log scale and visualising 
+dla3 = dla_data.copy()
+dla3['density'] =  np.log(dla3['density'])
+dla3.head(10)
+
+dla3 = dla3[dla3.n < 7500]
+dla3 = dla3.pivot(index = 'k', columns = 'n', values = 'density')
+ax3 = dla3.plot(figsize = (12,5))
+ax3.set_xlabel('k')
+ax3.set_ylabel('density')
+
+### Developing a regression model
+dla_data.density = np.log(dla_data.density)
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+X = dla_data[['n','density']]
+y = dla_data['k']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random_state=0)
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+
+print(regressor.intercept_)
+print(regressor.coef_)
+
+from sklearn import metrics
+y_pred = regressor.predict(X_test)
+df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
